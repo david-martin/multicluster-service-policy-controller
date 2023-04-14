@@ -1,6 +1,3 @@
-// Copied from https://github.com/open-cluster-management-io/governance-policy-propagator/blob/main/api/v1
-// The reason for copying this is because of go dependency issues when trying to import the repo
-//
 // Copyright (c) 2020 Red Hat, Inc.
 // Copyright Contributors to the Open Cluster Management project
 

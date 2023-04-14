@@ -31,8 +31,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	mosappsv1 "github.com/david-martin/multicluster-service-policy-controller/api/multicloud-operators-subscription/pkg/apis/apps/placementrule/v1"
-	configpolicyv1 "github.com/david-martin/multicluster-service-policy-controller/api/ocm-policy-api/api/v1"
+	configpolicycontrollerapiv1 "github.com/david-martin/multicluster-service-policy-controller/api/config-policy-controller/api/v1"
+	governancepolicypropagatorapiv1 "github.com/david-martin/multicluster-service-policy-controller/api/governance-policy-propagator/api/v1"
+	multicloudoperatorssubscriptionapiv1 "github.com/david-martin/multicluster-service-policy-controller/api/multicloud-operators-subscription/pkg/apis/apps/placementrule/v1"
+
 	examplecomv1alpha1 "github.com/david-martin/multicluster-service-policy-controller/api/v1alpha1"
 	"github.com/david-martin/multicluster-service-policy-controller/internal/controller"
 	//+kubebuilder:scaffold:imports
@@ -48,9 +50,9 @@ func init() {
 
 	utilruntime.Must(examplecomv1alpha1.AddToScheme(scheme))
 
-	utilruntime.Must(configpolicyv1.AddToScheme(scheme))
-
-	utilruntime.Must(mosappsv1.AddToScheme(scheme))
+	utilruntime.Must(configpolicycontrollerapiv1.AddToScheme(scheme))
+	utilruntime.Must(governancepolicypropagatorapiv1.AddToScheme(scheme))
+	utilruntime.Must(multicloudoperatorssubscriptionapiv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
