@@ -19,18 +19,16 @@ package controller
 import (
 	"context"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	// cpc "open-cluster-management.io/config-policy-controller/api/v1"
-
+	configpolicyv1 "github.com/david-martin/multicluster-service-policy-controller/api/config-policy-controller/api/v1"
 	examplecomv1alpha1 "github.com/david-martin/multicluster-service-policy-controller/api/v1alpha1"
 )
 
-// cpc "github.com/open-cluster-management-io/config-policy-controller/api/v1"
-//
 // MultiClusterServicePolicyReconciler reconciles a MultiClusterServicePolicy object
 type MultiClusterServicePolicyReconciler struct {
 	client.Client
@@ -51,10 +49,29 @@ type MultiClusterServicePolicyReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
 func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
 
-	// TODO(user): your logic here
-	// var configPolicy cpc.ConfigurationPolicy
+	previous := &examplecomv1alpha1.MultiClusterServicePolicy{}
+	err := r.Client.Get(ctx, client.ObjectKey{Namespace: req.Namespace, Name: req.Name}, previous)
+	if err != nil {
+		if err := client.IgnoreNotFound(err); err != nil {
+			log.Error(err, "Unable to fetch MultiClusterServicePolicy")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if previous.GetDeletionTimestamp() != nil && !previous.GetDeletionTimestamp().IsZero() {
+		log.Info("MultiClusterServicePolicy is deleting")
+		return ctrl.Result{}, nil
+	}
+
+	configPolicy := &configpolicyv1.ConfigurationPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      previous.Name,
+			Namespace: previous.Namespace,
+		},
+	}
 
 	return ctrl.Result{}, nil
 }
