@@ -9,4 +9,11 @@ metadata:
     app.kubernetes.io/created-by: multicluster-service-policy-controller
   name: multiclusterservicepolicy-sample
 spec:
-  # TODO(user): Add fields here
+  namespaces:
+    - "*"
+  allowedExposedResources:
+    - "deployment/backend"
+    - "deployment/echo"
+  allowedServices:
+    - "backend"
+    - "echo"

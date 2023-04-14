@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 
 	governancepolicypropagatorapiv1 "github.com/david-martin/multicluster-service-policy-controller/api/governance-policy-propagator/api/v1"
+	skupperapiv1alpha1 "github.com/skupperproject/skupper/pkg/apis/skupper/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	controllerruntime "sigs.k8s.io/controller-runtime"
@@ -69,7 +70,16 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 		return ctrl.Result{}, nil
 	}
 
-	skupperClusterPolicy := &configpolicycontrollerapiv1.ConfigurationPolicy{}
+	skupperClusterPolicy := &skupperapiv1alpha1.SkupperClusterPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: previous.Name,
+		},
+		Spec: skupperapiv1alpha1.SkupperClusterPolicySpec{
+			Namespaces:              previous.Spec.Namespaces,
+			AllowedExposedResources: previous.Spec.AllowedExposedResources,
+			AllowedServices:         previous.Spec.AllowedServices,
+		},
+	}
 	skupperClusterPolicyBytes, err := json.Marshal(skupperClusterPolicy)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -77,8 +87,7 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 
 	configPolicy := &configpolicycontrollerapiv1.ConfigurationPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      previous.Name,
-			Namespace: previous.Namespace,
+			Name: previous.Name,
 		},
 		Spec: &configpolicycontrollerapiv1.ConfigurationPolicySpec{
 			RemediationAction: "enforce",
