@@ -1,0 +1,12 @@
+apiVersion: example.com.example.com/v1alpha1
+kind: MultiClusterServicePolicy
+metadata:
+  labels:
+    app.kubernetes.io/name: multiclusterservicepolicy
+    app.kubernetes.io/instance: multiclusterservicepolicy-sample
+    app.kubernetes.io/part-of: multicluster-service-policy-controller
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: multicluster-service-policy-controller
+  name: multiclusterservicepolicy-sample
+spec:
+  # TODO(user): Add fields here
