@@ -71,6 +71,7 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 			Name:      previous.Name,
 			Namespace: previous.Namespace,
 		},
+		Spec: &configpolicyv1.ConfigurationPolicySpec{},
 	}
 
 	return ctrl.Result{}, nil
