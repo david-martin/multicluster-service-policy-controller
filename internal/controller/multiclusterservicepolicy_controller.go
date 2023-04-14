@@ -18,9 +18,12 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 
+	governancepolicypropagatorapiv1 "github.com/david-martin/multicluster-service-policy-controller/api/governance-policy-propagator/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	controllerruntime "sigs.k8s.io/controller-runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -66,12 +69,68 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 		return ctrl.Result{}, nil
 	}
 
+	skupperClusterPolicy := &configpolicycontrollerapiv1.ConfigurationPolicy{}
+	skupperClusterPolicyBytes, err := json.Marshal(skupperClusterPolicy)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	configPolicy := &configpolicycontrollerapiv1.ConfigurationPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      previous.Name,
 			Namespace: previous.Namespace,
 		},
-		Spec: &configpolicycontrollerapiv1.ConfigurationPolicySpec{},
+		Spec: &configpolicycontrollerapiv1.ConfigurationPolicySpec{
+			RemediationAction: "enforce",
+			Severity:          "low",
+			ObjectTemplates: []*configpolicycontrollerapiv1.ObjectTemplate{
+				{
+					ComplianceType: configpolicycontrollerapiv1.MustHave,
+					ObjectDefinition: runtime.RawExtension{
+						Raw: skupperClusterPolicyBytes,
+					},
+				},
+			},
+		},
+	}
+	configPolicyBytes, err := json.Marshal(configPolicy)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	policyTemplates := make([]*governancepolicypropagatorapiv1.PolicyTemplate, 1)
+	policyTemplates = append(policyTemplates, &governancepolicypropagatorapiv1.PolicyTemplate{
+		ObjectDefinition: runtime.RawExtension{
+			Raw: configPolicyBytes,
+		},
+	})
+
+	policy := &governancepolicypropagatorapiv1.Policy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      previous.Name,
+			Namespace: previous.Namespace,
+		},
+	}
+	op, err := controllerruntime.CreateOrUpdate(ctx, r.Client, policy, func() error {
+		policy.Annotations = map[string]string{
+			"policy.open-cluster-management.io/standards":  "Example Standard",
+			"policy.open-cluster-management.io/categories": "Example Category",
+			"policy.open-cluster-management.io/controls":   "Example Control",
+		}
+
+		policy.Spec = governancepolicypropagatorapiv1.PolicySpec{
+			RemediationAction: "enforce",
+			Disabled:          false,
+			PolicyTemplates:   policyTemplates,
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		log.Error(err, "MultiClusterServicePolicy reconcile failed")
+	} else {
+		log.Info("MultiClusterServicePolicy successfully reconciled", "policy_operation", op)
 	}
 
 	return ctrl.Result{}, nil
