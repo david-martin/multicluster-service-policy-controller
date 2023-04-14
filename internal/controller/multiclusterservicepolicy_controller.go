@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	configpolicyv1 "github.com/david-martin/multicluster-service-policy-controller/api/config-policy-controller/api/v1"
+	configpolicyv1 "github.com/david-martin/multicluster-service-policy-controller/api/ocm-policy-api/api/v1"
 	examplecomv1alpha1 "github.com/david-martin/multicluster-service-policy-controller/api/v1alpha1"
 )
 

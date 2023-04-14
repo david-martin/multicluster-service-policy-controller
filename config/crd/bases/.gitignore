@@ -1,1 +1,3 @@
-/policy.open-cluster-management.io_configurationpolicies.yaml
+# Ignore generated CRDs for imported types
+/apps.open-cluster-management.io_*.yaml
+/policy.open-cluster-management.io_*.yaml

@@ -1,4 +1,4 @@
-// Copied from https://github.com/open-cluster-management-io/config-policy-controller/tree/v0.10.0/api/v1
+// Copied from https://github.com/open-cluster-management-io/governance-policy-propagator/blob/main/api/v1
 // The reason for copying this is because of go dependency issues when trying to import the repo
 //
 // Copyright (c) 2021 Red Hat, Inc.
@@ -24,3 +24,9 @@ var (
 	// AddToScheme adds the types in this group-version to the given scheme.
 	AddToScheme = SchemeBuilder.AddToScheme
 )
+
+// Kind Policy
+const Kind = "Policy"
+
+// PolicySetKind Policy
+const PolicySetKind = "PolicySet"
