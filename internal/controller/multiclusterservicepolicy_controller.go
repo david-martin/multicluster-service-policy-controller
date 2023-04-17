@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	governancepolicypropagatorapiv1 "github.com/david-martin/multicluster-service-policy-controller/api/governance-policy-propagator/api/v1"
 	skupperapiv1alpha1 "github.com/skupperproject/skupper/pkg/apis/skupper/v1alpha1"
@@ -71,6 +72,10 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 	}
 
 	skupperClusterPolicy := &skupperapiv1alpha1.SkupperClusterPolicy{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "SkupperClusterPolicy",
+			APIVersion: fmt.Sprintf("%s/%s", skupperapiv1alpha1.SchemeGroupVersion.Group, skupperapiv1alpha1.SchemeGroupVersion.Version),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: previous.Name,
 		},
@@ -81,13 +86,16 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 		},
 	}
 
-	// TODO: apiVersion & kind in raw bytes
 	skupperClusterPolicyBytes, err := json.Marshal(skupperClusterPolicy)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
 	configPolicy := &configpolicycontrollerapiv1.ConfigurationPolicy{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigurationPolicy",
+			APIVersion: fmt.Sprintf("%s/%s", configpolicycontrollerapiv1.GroupVersion.Group, configpolicycontrollerapiv1.GroupVersion.Version),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: previous.Name,
 		},
@@ -105,7 +113,7 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 		},
 	}
 
-	// TODO: apiVersion & kind in raw bytes
+	// Marshal to JSON bytes
 	configPolicyBytes, err := json.Marshal(configPolicy)
 	if err != nil {
 		return ctrl.Result{}, err

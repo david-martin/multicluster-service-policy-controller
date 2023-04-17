@@ -34,6 +34,7 @@ import (
 	configpolicycontrollerapiv1 "github.com/david-martin/multicluster-service-policy-controller/api/config-policy-controller/api/v1"
 	governancepolicypropagatorapiv1 "github.com/david-martin/multicluster-service-policy-controller/api/governance-policy-propagator/api/v1"
 	multicloudoperatorssubscriptionapiv1 "github.com/david-martin/multicluster-service-policy-controller/api/multicloud-operators-subscription/pkg/apis/apps/placementrule/v1"
+	skupperapiv1alpha1 "github.com/skupperproject/skupper/pkg/apis/skupper/v1alpha1"
 
 	examplecomv1alpha1 "github.com/david-martin/multicluster-service-policy-controller/api/v1alpha1"
 	"github.com/david-martin/multicluster-service-policy-controller/internal/controller"
@@ -49,10 +50,10 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(examplecomv1alpha1.AddToScheme(scheme))
-
 	utilruntime.Must(configpolicycontrollerapiv1.AddToScheme(scheme))
 	utilruntime.Must(governancepolicypropagatorapiv1.AddToScheme(scheme))
 	utilruntime.Must(multicloudoperatorssubscriptionapiv1.AddToScheme(scheme))
+	utilruntime.Must(skupperapiv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
