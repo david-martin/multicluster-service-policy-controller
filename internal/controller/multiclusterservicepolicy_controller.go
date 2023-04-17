@@ -25,6 +25,7 @@ import (
 	skupperapiv1alpha1 "github.com/skupperproject/skupper/pkg/apis/skupper/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	ocmclusterv1beta1 "open-cluster-management.io/api/cluster/v1beta1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -133,7 +134,7 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 			Namespace: previous.Namespace,
 		},
 	}
-	op, err := controllerruntime.CreateOrUpdate(ctx, r.Client, policy, func() error {
+	_, err = controllerruntime.CreateOrUpdate(ctx, r.Client, policy, func() error {
 		policy.Annotations = map[string]string{
 			"policy.open-cluster-management.io/standards":  "Example Standard",
 			"policy.open-cluster-management.io/categories": "Example Category",
@@ -148,37 +149,59 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 
 		return nil
 	})
-
-	// TODO: Placement
-	// 	---
-	// apiVersion: policy.open-cluster-management.io/v1
-	// kind: PlacementBinding
-	// metadata:
-	//   name: binding-policy-pod
-	// placementRef:
-	//   name: placement-policy-pod
-	//   kind: Placement
-	//   apiGroup: cluster.open-cluster-management.io
-	// subjects:
-	// - name: policy-pod
-	//   kind: Policy
-	//   apiGroup: policy.open-cluster-management.io
-	// ---
-	// apiVersion: cluster.open-cluster-management.io/v1beta1
-	// kind: Placement
-	// metadata:
-	//   name: placement-policy-pod
-	// spec:
-	//   predicates:
-	//   - requiredClusterSelector:
-	//       labelSelector:
-	//         matchExpressions:
-	//           - {key: environment, operator: In, values: ["dev"]}
-
 	if err != nil {
-		log.Error(err, "MultiClusterServicePolicy reconcile failed")
-	} else {
-		log.Info("MultiClusterServicePolicy successfully reconciled", "policy_operation", op)
+		return ctrl.Result{}, err
+	}
+
+	placement := &ocmclusterv1beta1.Placement{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      previous.Name,
+			Namespace: previous.Namespace,
+		},
+	}
+	_, err = controllerruntime.CreateOrUpdate(ctx, r.Client, placement, func() error {
+		placement.Spec = ocmclusterv1beta1.PlacementSpec{
+			Predicates: []ocmclusterv1beta1.ClusterPredicate{
+				{
+					RequiredClusterSelector: ocmclusterv1beta1.ClusterSelector{
+						LabelSelector: metav1.LabelSelector{
+							MatchExpressions: []metav1.LabelSelectorRequirement{},
+						},
+					},
+				},
+			},
+		}
+
+		return nil
+	})
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	placementBinding := &governancepolicypropagatorapiv1.PlacementBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      previous.Name,
+			Namespace: previous.Namespace,
+		},
+	}
+	_, err = controllerruntime.CreateOrUpdate(ctx, r.Client, placementBinding, func() error {
+		placementBinding.PlacementRef = governancepolicypropagatorapiv1.PlacementSubject{
+			Name:     placement.Name,
+			Kind:     "Placement",
+			APIGroup: ocmclusterv1beta1.GroupVersion.Group,
+		}
+		placementBinding.Subjects = []governancepolicypropagatorapiv1.Subject{
+			{
+				Name:     policy.Name,
+				Kind:     "Policy",
+				APIGroup: governancepolicypropagatorapiv1.GroupVersion.Group,
+			},
+		}
+
+		return nil
+	})
+	if err != nil {
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
