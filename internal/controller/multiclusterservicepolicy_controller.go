@@ -80,6 +80,8 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 			AllowedServices:         previous.Spec.AllowedServices,
 		},
 	}
+
+	// TODO: apiVersion & kind in raw bytes
 	skupperClusterPolicyBytes, err := json.Marshal(skupperClusterPolicy)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -102,17 +104,20 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 			},
 		},
 	}
+
+	// TODO: apiVersion & kind in raw bytes
 	configPolicyBytes, err := json.Marshal(configPolicy)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	policyTemplates := make([]*governancepolicypropagatorapiv1.PolicyTemplate, 1)
-	policyTemplates = append(policyTemplates, &governancepolicypropagatorapiv1.PolicyTemplate{
-		ObjectDefinition: runtime.RawExtension{
-			Raw: configPolicyBytes,
+	policyTemplates := []*governancepolicypropagatorapiv1.PolicyTemplate{
+		{
+			ObjectDefinition: runtime.RawExtension{
+				Raw: configPolicyBytes,
+			},
 		},
-	})
+	}
 
 	policy := &governancepolicypropagatorapiv1.Policy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -135,6 +140,32 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 
 		return nil
 	})
+
+	// TODO: Placement
+	// 	---
+	// apiVersion: policy.open-cluster-management.io/v1
+	// kind: PlacementBinding
+	// metadata:
+	//   name: binding-policy-pod
+	// placementRef:
+	//   name: placement-policy-pod
+	//   kind: Placement
+	//   apiGroup: cluster.open-cluster-management.io
+	// subjects:
+	// - name: policy-pod
+	//   kind: Policy
+	//   apiGroup: policy.open-cluster-management.io
+	// ---
+	// apiVersion: cluster.open-cluster-management.io/v1beta1
+	// kind: Placement
+	// metadata:
+	//   name: placement-policy-pod
+	// spec:
+	//   predicates:
+	//   - requiredClusterSelector:
+	//       labelSelector:
+	//         matchExpressions:
+	//           - {key: environment, operator: In, values: ["dev"]}
 
 	if err != nil {
 		log.Error(err, "MultiClusterServicePolicy reconcile failed")
