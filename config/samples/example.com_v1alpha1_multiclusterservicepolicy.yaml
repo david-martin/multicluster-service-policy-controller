@@ -17,3 +17,7 @@ spec:
   allowedServices:
     - "backend"
     - "echo"
+  placementRef:
+    apiGroup: cluster.open-cluster-management.io
+    kind: Placement
+    name: multiclusterservicepolicy-sample

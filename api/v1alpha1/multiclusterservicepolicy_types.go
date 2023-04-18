@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	governancepolicypropagatorapiv1 "github.com/david-martin/multicluster-service-policy-controller/api/governance-policy-propagator/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,9 +29,10 @@ type MultiClusterServicePolicySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Namespaces              []string `json:"namespaces"`
-	AllowedExposedResources []string `json:"allowedExposedResources"`
-	AllowedServices         []string `json:"allowedServices"`
+	Namespaces              []string                                         `json:"namespaces"`
+	AllowedExposedResources []string                                         `json:"allowedExposedResources"`
+	AllowedServices         []string                                         `json:"allowedServices"`
+	PlacementRef            governancepolicypropagatorapiv1.PlacementSubject `json:"placementRef"`
 }
 
 // MultiClusterServicePolicyStatus defines the observed state of MultiClusterServicePolicy

@@ -25,7 +25,6 @@ import (
 	skupperapiv1alpha1 "github.com/skupperproject/skupper/pkg/apis/skupper/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	ocmclusterv1beta1 "open-cluster-management.io/api/cluster/v1beta1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -153,31 +152,7 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 		return ctrl.Result{}, err
 	}
 
-	placement := &ocmclusterv1beta1.Placement{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      previous.Name,
-			Namespace: previous.Namespace,
-		},
-	}
-	_, err = controllerruntime.CreateOrUpdate(ctx, r.Client, placement, func() error {
-		placement.Spec = ocmclusterv1beta1.PlacementSpec{
-			Predicates: []ocmclusterv1beta1.ClusterPredicate{
-				{
-					RequiredClusterSelector: ocmclusterv1beta1.ClusterSelector{
-						LabelSelector: metav1.LabelSelector{
-							MatchExpressions: []metav1.LabelSelectorRequirement{},
-						},
-					},
-				},
-			},
-		}
-
-		return nil
-	})
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
+	placement := previous.Spec.PlacementRef
 	placementBinding := &governancepolicypropagatorapiv1.PlacementBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      previous.Name,
@@ -187,8 +162,8 @@ func (r *MultiClusterServicePolicyReconciler) Reconcile(ctx context.Context, req
 	_, err = controllerruntime.CreateOrUpdate(ctx, r.Client, placementBinding, func() error {
 		placementBinding.PlacementRef = governancepolicypropagatorapiv1.PlacementSubject{
 			Name:     placement.Name,
-			Kind:     "Placement",
-			APIGroup: ocmclusterv1beta1.GroupVersion.Group,
+			Kind:     placement.Kind,
+			APIGroup: placement.APIGroup,
 		}
 		placementBinding.Subjects = []governancepolicypropagatorapiv1.Subject{
 			{
